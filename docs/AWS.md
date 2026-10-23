@@ -10,7 +10,7 @@ Elige el tamaño según tu presupuesto; para construir la imagen en el servidor,
 
 ## 1. Publicar el código
 
-Publica el proyecto en GitHub siguiendo el README. Los comandos de esta guía contienen `TU_USUARIO`, `TU_IP_PUBLICA` y `tu-clave.pem`: sustitúyelos por tus valores reales. No subas `.env`, claves `.pem` ni credenciales AWS al repositorio.
+El proyecto está publicado en [sbarahona-m17/clinica-api](https://github.com/sbarahona-m17/clinica-api). Los comandos de esta guía contienen `TU_IP_PUBLICA` y `tu-clave.pem`: sustitúyelos por tus valores reales. No subas `.env`, claves `.pem` ni credenciales AWS al repositorio.
 
 ## 2. Crear EC2
 
@@ -74,7 +74,7 @@ Estos comandos corresponden a Ubuntu 24.04 x86_64, como se indicó al crear la i
 ## 5. Configurar y desplegar
 
 ```bash
-git clone https://github.com/TU_USUARIO/clinica-api.git
+git clone https://github.com/sbarahona-m17/clinica-api.git
 cd clinica-api
 cp .env.example .env
 chmod 600 .env

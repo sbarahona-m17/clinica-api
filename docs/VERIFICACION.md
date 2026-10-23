@@ -13,7 +13,7 @@ Fecha: **23 de octubre de 2026**.
 | `GET /actuator/health` después de recrear los contenedores | HTTP 200, `{"status":"UP"}` |
 | `docker compose --env-file .env.example -f compose.aws.yaml config --quiet` | Configuración válida |
 
-La validación del archivo Compose de AWS es local. **No se ha creado ni verificado una instancia AWS**, ni se ha publicado el repositorio remoto. Esos pasos se realizan siguiendo [AWS.md](AWS.md) y el README.
+La validación del archivo Compose de AWS es local. **No se ha creado ni verificado una instancia AWS**. El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api); el despliegue se realiza siguiendo [AWS.md](AWS.md).
 
 Para repetir las pruebas automatizadas y HTTP:
 

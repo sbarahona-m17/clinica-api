@@ -10,7 +10,7 @@ API REST con Spring Boot, Java 21 y Maven. Permite registrar pacientes y gestion
 
 Completar con los enlaces reales después de publicar y verificar el despliegue:
 
-- Repositorio: **PENDIENTE de publicar en GitHub**.
+- Repositorio: [github.com/sbarahona-m17/clinica-api](https://github.com/sbarahona-m17/clinica-api).
 - API en AWS: **PENDIENTE de desplegar** (`http://TU_IP_PUBLICA`).
 - Salud del servicio: `http://TU_IP_PUBLICA/actuator/health`.
 
@@ -254,22 +254,19 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://
 
 El script crea sus propios registros, comprueba ambos CRUD, la relación y un error 409, y elimina los registros creados al terminar.
 
-## Publicar el repositorio y entregar
+## Actualizar el repositorio y entregar
 
-1. Crea un repositorio vacío en GitHub, por ejemplo `clinica-api`.
-2. Desde la raíz del proyecto ejecuta (si aún no existe un repositorio Git):
+El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api). Para subir cambios desde la raíz del proyecto:
 
    ```powershell
-   git init -b main
    git add .
-   git commit -m "API REST de pacientes y citas con Docker y AWS"
-   git remote add origin https://github.com/TU_USUARIO/clinica-api.git
-   git push -u origin main
+   git commit -m "Actualizar API de clinica"
+   git push
    ```
 
-3. Realiza el despliegue de la guía AWS y ejecuta el smoke test usando la URL pública.
-4. Completa los enlaces reales de la sección **Enlaces de entrega** y sube el README actualizado.
-5. Entrega el enlace del repositorio y la URL pública; mantén la instancia encendida durante la revisión.
+1. Realiza el despliegue de la guía AWS y ejecuta el smoke test usando la URL pública.
+2. Completa el enlace real de AWS en la sección **Enlaces de entrega** y sube el README actualizado.
+3. Entrega el enlace del repositorio y la URL pública; mantén la instancia encendida durante la revisión.
 
 ## Referencias
 
