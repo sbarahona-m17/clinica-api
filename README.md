@@ -15,6 +15,8 @@ Enlaces del proyecto y del despliegue verificado el 23 de octubre de 2026:
 - Salud del servicio: [http://3.145.8.190/actuator/health](http://3.145.8.190/actuator/health).
 - Pacientes: [http://3.145.8.190/api/pacientes](http://3.145.8.190/api/pacientes).
 - Citas: [http://3.145.8.190/api/citas](http://3.145.8.190/api/citas).
+- Archivo de pruebas JSON del despliegue (Postman): [`pruebas/Clinica-AWS.postman_collection.json`](pruebas/Clinica-AWS.postman_collection.json).
+- Resultados JSON de la ejecución contra AWS: [`pruebas/Clinica-AWS.resultados.json`](pruebas/Clinica-AWS.resultados.json), con **22 solicitudes y 55 validaciones, sin fallos**.
 
 El despliegue pasó las pruebas HTTP de ambos CRUD y la relación 1:N. Es una demostración temporal: la instancia debe permanecer encendida durante la revisión. Usa `http://`; la configuración no incluye HTTPS. La IPv4 puede cambiar al detener y volver a iniciar la instancia.
 
@@ -255,6 +257,8 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://
 ```
 
 El script crea sus propios registros, comprueba ambos CRUD, la relación y un error 409, y elimina los registros creados al terminar.
+
+También se incluye una [colección Postman en JSON para el despliegue AWS](pruebas/Clinica-AWS.postman_collection.json), ejecutada con Newman con resultado correcto: **22 solicitudes, 55 validaciones y 0 fallos**. Para importarla y repetir las pruebas, consulta [`pruebas/README.md`](pruebas/README.md).
 
 ## Actualizar el repositorio y entregar
 

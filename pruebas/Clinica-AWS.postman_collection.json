@@ -1,0 +1,832 @@
+{
+  "info": {
+    "_postman_id": "2bd10817-b201-41c0-bad9-22a110dbb58d",
+    "name": "Clinica Medica - Pruebas AWS - Sofia Barahona",
+    "description": "Pruebas del despliegue AWS http://3.145.8.190. Ejecutar la coleccion completa en orden con Collection Runner. Crea datos ficticios con documento unico, captura identificadores y elimina sus propios registros al terminar. Verifica ambos CRUD, relacion 1:N, validaciones y errores. No requiere un entorno externo ni credenciales. Estudiante: Sofia Barahona Marin.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://3.145.8.190",
+      "type": "string"
+    },
+    {
+      "key": "pacienteId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "citaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "segundaCitaId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "documentoPrueba",
+      "value": "",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "01 - Salud del despliegue AWS",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.collectionVariables.set('documentoPrueba', 'PM' + pm.variables.replaceIn('{{$guid}}').replace(/-/g, '').slice(0, 24));",
+              "['pacienteId', 'citaId', 'segundaCitaId'].forEach(function (key) { pm.collectionVariables.set(key, ''); });"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Servicio y base de datos UP\", function () { pm.expect(responseBody.status).to.eql('UP'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "02 - Crear paciente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documento\": \"{{documentoPrueba}}\",\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Prueba AWS\",\n  \"fechaNacimiento\": \"2000-05-10\",\n  \"email\": \"ana.aws@example.com\",\n  \"telefono\": \"3001234567\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Identificador generado\", function () { pm.expect(responseBody.id).to.be.a('number').and.above(0); });",
+              "pm.test(\"Documento enviado conservado\", function () { pm.expect(responseBody.documento).to.eql(pm.collectionVariables.get('documentoPrueba')); });",
+              "pm.test(\"Location del paciente\", function () { pm.expect(pm.response.headers.get('Location')).to.eql('/api/pacientes/' + responseBody.id); });",
+              "pm.collectionVariables.set('pacienteId', responseBody.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "03 - Listar pacientes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Listado incluye el paciente creado\", function () { pm.expect(responseBody.map(p => p.id)).to.include(Number(pm.collectionVariables.get('pacienteId'))); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "04 - Consultar paciente",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Paciente correcto\", function () { pm.expect(responseBody.id).to.eql(Number(pm.collectionVariables.get('pacienteId'))); });",
+              "pm.test(\"Email conservado\", function () { pm.expect(responseBody.email).to.eql('ana.aws@example.com'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "05 - Actualizar paciente",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documento\": \"{{documentoPrueba}}\",\n  \"nombres\": \"Ana Actualizada AWS\",\n  \"apellidos\": \"Prueba AWS\",\n  \"fechaNacimiento\": \"2000-05-10\",\n  \"email\": \"ana.aws@example.com\",\n  \"telefono\": \"3007654321\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Nombre actualizado\", function () { pm.expect(responseBody.nombres).to.eql('Ana Actualizada AWS'); });",
+              "pm.test(\"Telefono actualizado\", function () { pm.expect(responseBody.telefono).to.eql('3007654321'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "06 - Documento duplicado rechazado",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"documento\": \"{{documentoPrueba}}\",\n  \"nombres\": \"Ana\",\n  \"apellidos\": \"Prueba AWS\",\n  \"fechaNacimiento\": \"2000-05-10\",\n  \"email\": \"ana.aws@example.com\",\n  \"telefono\": \"3001234567\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Conflicto informado\", function () { pm.expect(responseBody.status).to.eql(409); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "07 - Campos obligatorios validados",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 400', function () { pm.response.to.have.status(400); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Detalle de validaciones\", function () { pm.expect(responseBody.errors).to.have.property('documento'); pm.expect(responseBody.errors).to.have.property('email'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "08 - Crear primera cita",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{pacienteId}}\",\n  \"fechaHora\": \"2026-11-15T09:00:00\",\n  \"motivo\": \"Control general - prueba AWS\",\n  \"medico\": \"Dra. Demo\",\n  \"estado\": \"PROGRAMADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Cita asociada al paciente creado\", function () { pm.expect(responseBody.pacienteId).to.eql(Number(pm.collectionVariables.get('pacienteId'))); });",
+              "pm.test(\"Identificador generado\", function () { pm.expect(responseBody.id).to.be.a('number').and.above(0); });",
+              "pm.test(\"Location de la cita\", function () { pm.expect(pm.response.headers.get('Location')).to.eql('/api/citas/' + responseBody.id); });",
+              "pm.collectionVariables.set('citaId', responseBody.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "09 - Crear segunda cita del mismo paciente",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{pacienteId}}\",\n  \"fechaHora\": \"2026-11-16T10:00:00\",\n  \"motivo\": \"Control general - prueba AWS\",\n  \"medico\": \"Dra. Demo\",\n  \"estado\": \"PROGRAMADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 201', function () { pm.response.to.have.status(201); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Cita asociada al paciente creado\", function () { pm.expect(responseBody.pacienteId).to.eql(Number(pm.collectionVariables.get('pacienteId'))); });",
+              "pm.test(\"Cita diferente de la primera\", function () { pm.expect(responseBody.id).not.to.eql(Number(pm.collectionVariables.get('citaId'))); });",
+              "pm.collectionVariables.set('segundaCitaId', responseBody.id);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "10 - Listar citas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Listado incluye ambas citas\", function () { pm.expect(responseBody.map(c => c.id)).to.include.members([Number(pm.collectionVariables.get('citaId')), Number(pm.collectionVariables.get('segundaCitaId'))]); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "11 - Consultar cita",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas/{{citaId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas",
+            "{{citaId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Cita asociada al paciente creado\", function () { pm.expect(responseBody.pacienteId).to.eql(Number(pm.collectionVariables.get('pacienteId'))); });",
+              "pm.test(\"Estado inicial programada\", function () { pm.expect(responseBody.estado).to.eql('PROGRAMADA'); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "12 - Verificar relacion paciente 1 a N citas",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}",
+            "citas"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Paciente tiene dos citas\", function () { pm.expect(responseBody).to.have.lengthOf(2); });",
+              "pm.test(\"Las dos citas pertenecen al paciente\", function () { pm.expect(responseBody.every(c => c.pacienteId === Number(pm.collectionVariables.get('pacienteId')))).to.eql(true); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "13 - Actualizar cita",
+      "request": {
+        "method": "PUT",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas/{{citaId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas",
+            "{{citaId}}"
+          ]
+        },
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"pacienteId\": \"{{pacienteId}}\",\n  \"fechaHora\": \"2026-11-15T11:00:00\",\n  \"motivo\": \"Control general - prueba AWS\",\n  \"medico\": \"Dra. Demo\",\n  \"estado\": \"COMPLETADA\"\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Cita asociada al paciente creado\", function () { pm.expect(responseBody.pacienteId).to.eql(Number(pm.collectionVariables.get('pacienteId'))); });",
+              "pm.test(\"Estado actualizado\", function () { pm.expect(responseBody.estado).to.eql('COMPLETADA'); });",
+              "pm.test(\"Hora actualizada\", function () { pm.expect(responseBody.fechaHora).to.match(/^2026-11-15T11:00/); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "14 - Proteger paciente con citas",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 409', function () { pm.response.to.have.status(409); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Conflicto informado\", function () { pm.expect(responseBody.status).to.eql(409); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "15 - Historial conservado despues del conflicto",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}",
+            "citas"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Ninguna cita eliminada por el conflicto\", function () { pm.expect(responseBody).to.have.lengthOf(2); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "16 - Eliminar primera cita",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas/{{citaId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas",
+            "{{citaId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+              "pm.test(\"Respuesta sin cuerpo\", function () { pm.expect(pm.response.text()).to.eql(''); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "17 - Cita eliminada devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas/{{citaId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas",
+            "{{citaId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', function () { pm.response.to.have.status(404); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Recurso inexistente informado\", function () { pm.expect(responseBody.status).to.eql(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "18 - Eliminar segunda cita",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/citas/{{segundaCitaId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "citas",
+            "{{segundaCitaId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+              "pm.test(\"Respuesta sin cuerpo\", function () { pm.expect(pm.response.text()).to.eql(''); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "19 - Eliminar paciente sin citas",
+      "request": {
+        "method": "DELETE",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 204', function () { pm.response.to.have.status(204); });",
+              "pm.test(\"Respuesta sin cuerpo\", function () { pm.expect(pm.response.text()).to.eql(''); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "20 - Paciente eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', function () { pm.response.to.have.status(404); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Recurso inexistente informado\", function () { pm.expect(responseBody.status).to.eql(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "21 - Relacion del paciente eliminado devuelve 404",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/pacientes/{{pacienteId}}/citas",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "pacientes",
+            "{{pacienteId}}",
+            "citas"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 404', function () { pm.response.to.have.status(404); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Paciente inexistente informado\", function () { pm.expect(responseBody.status).to.eql(404); });"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "22 - Salud final del despliegue",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/actuator/health",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "actuator",
+            "health"
+          ]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('HTTP 200', function () { pm.response.to.have.status(200); });",
+              "var responseBody = pm.response.json();",
+              "pm.test(\"Servicio disponible despues del CRUD\", function () { pm.expect(responseBody.status).to.eql('UP'); });"
+            ]
+          }
+        }
+      ]
+    }
+  ]
+}

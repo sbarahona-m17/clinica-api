@@ -41,6 +41,12 @@ powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://
 
 El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api). La instancia debe mantenerse encendida durante la revisión; las comprobaciones anteriores describen el estado observado, no un monitoreo continuo. La guía de operación está en [AWS.md](AWS.md).
 
+## Colección Postman y reporte JSON del despliegue
+
+Se ejecutó la colección [`Clinica-AWS.postman_collection.json`](../pruebas/Clinica-AWS.postman_collection.json) usando Newman contra **http://3.145.8.190**, con resultado **22 solicitudes, 55 validaciones, 0 fallos**. La ejecución incluyó ambos CRUD, la relación 1:N y los casos de error; los registros ficticios se eliminaron al terminar.
+
+El reporte original de la ejecución está en [`Clinica-AWS.resultados.json`](../pruebas/Clinica-AWS.resultados.json). Incluye solicitudes con URLs resueltas del despliegue, respuestas y resultados de las validaciones.
+
 ## Repetir las pruebas locales
 
 Para repetir las pruebas automatizadas y HTTP:
