@@ -1,4 +1,4 @@
-# Verificación local
+# Verificación local y en AWS
 
 Fecha: **23 de octubre de 2026**.
 
@@ -15,7 +15,33 @@ Fecha: **23 de octubre de 2026**.
 | `cfn-lint -t infra/aws.yaml -r us-east-2` | Plantilla de infraestructura válida, sin errores ni advertencias |
 | `bash -n scripts/deploy-aws.sh` y script UserData extraído de la plantilla | Sintaxis Bash válida |
 
-La validación del archivo Compose de AWS es local. **No se ha creado ni verificado una instancia AWS**. El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api); el despliegue se realiza siguiendo [AWS.md](AWS.md).
+## Verificación del despliegue AWS
+
+Despliegue en **EC2, us-east-2 (Ohio)**, con Docker Compose y PostgreSQL. Inicio de disponibilidad comunicado por el script: **2026-10-23 17:25:15 UTC** (12:25:15 de Colombia).
+
+Pruebas ejecutadas desde un equipo externo a AWS el **23 de octubre de 2026, aproximadamente a las 17:26 UTC**:
+
+| Comprobación | Resultado |
+| --- | --- |
+| Portada `http://3.145.8.190/` | HTTP 200 |
+| `/actuator/health` | HTTP 200, `{"status":"UP"}` |
+| Crear, listar, consultar, actualizar y eliminar pacientes | Correcto: 201, 200 y 204 |
+| Crear, listar, consultar, actualizar y eliminar citas | Correcto: 201, 200 y 204 |
+| Un paciente con dos citas | Relación 1:N verificada |
+| Documento duplicado | HTTP 409 |
+| Eliminar paciente con citas | HTTP 409 |
+| Consultar registros después de eliminarlos | HTTP 404 |
+| Limpieza de datos ficticios de prueba | Completada |
+
+Comando ejecutado con resultado correcto:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File scripts/smoke-test.ps1 -BaseUrl http://3.145.8.190
+```
+
+El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api). La instancia debe mantenerse encendida durante la revisión; las comprobaciones anteriores describen el estado observado, no un monitoreo continuo. La guía de operación está en [AWS.md](AWS.md).
+
+## Repetir las pruebas locales
 
 Para repetir las pruebas automatizadas y HTTP:
 

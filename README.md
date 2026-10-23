@@ -4,17 +4,19 @@
 
 **Tema:** Clínica Médica · **Relación:** Paciente 1 : N Cita
 
-API REST con Spring Boot, Java 21 y Maven. Permite registrar pacientes y gestionar sus citas mediante CRUD completo. Incluye arquitectura en capas, validación, manejo de errores, pruebas de integración y Docker. El despliegue previsto es **AWS EC2**.
+API REST con Spring Boot, Java 21 y Maven. Permite registrar pacientes y gestionar sus citas mediante CRUD completo. Incluye arquitectura en capas, validación, manejo de errores, pruebas de integración y Docker. Desplegada en **AWS EC2**, región **us-east-2 (Ohio)**.
 
 ## Enlaces de entrega
 
-Completar con los enlaces reales después de publicar y verificar el despliegue:
+Enlaces del proyecto y del despliegue verificado el 23 de octubre de 2026:
 
 - Repositorio: [github.com/sbarahona-m17/clinica-api](https://github.com/sbarahona-m17/clinica-api).
-- API en AWS: **PENDIENTE de desplegar** (`http://TU_IP_PUBLICA`).
-- Salud del servicio: `http://TU_IP_PUBLICA/actuator/health`.
+- API en AWS: [http://3.145.8.190](http://3.145.8.190).
+- Salud del servicio: [http://3.145.8.190/actuator/health](http://3.145.8.190/actuator/health).
+- Pacientes: [http://3.145.8.190/api/pacientes](http://3.145.8.190/api/pacientes).
+- Citas: [http://3.145.8.190/api/citas](http://3.145.8.190/api/citas).
 
-La configuración de AWS está preparada; esto no significa que ya exista un despliegue activo.
+El despliegue pasó las pruebas HTTP de ambos CRUD y la relación 1:N. Es una demostración temporal: la instancia debe permanecer encendida durante la revisión. Usa `http://`; la configuración no incluye HTTPS. La IPv4 puede cambiar al detener y volver a iniciar la instancia.
 
 ## Entidades y relación
 
@@ -244,7 +246,7 @@ Sigue la guía [`docs/AWS.md`](docs/AWS.md): EC2 con Ubuntu, Docker Compose, Pos
 .\mvnw.cmd clean verify
 ```
 
-Las 11 pruebas de integración verifican el CRUD de ambas entidades, la relación 1:N, el cambio de paciente de una cita, transacciones ante actualizaciones inválidas, documentos duplicados, campos inválidos, recursos inexistentes y protección del historial. Consulta los resultados de la verificación local en [`docs/VERIFICACION.md`](docs/VERIFICACION.md).
+Las 11 pruebas de integración verifican el CRUD de ambas entidades, la relación 1:N, el cambio de paciente de una cita, transacciones ante actualizaciones inválidas, documentos duplicados, campos inválidos, recursos inexistentes y protección del historial. Consulta los resultados de la verificación local y en AWS en [`docs/VERIFICACION.md`](docs/VERIFICACION.md).
 
 Para verificar el servicio real (local, Docker o AWS) con datos ficticios:
 
@@ -264,9 +266,7 @@ El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clin
    git push
    ```
 
-1. Realiza el despliegue de la guía AWS y ejecuta el smoke test usando la URL pública.
-2. Completa el enlace real de AWS en la sección **Enlaces de entrega** y sube el README actualizado.
-3. Entrega el enlace del repositorio y la URL pública; mantén la instancia encendida durante la revisión.
+Entrega el enlace del repositorio y la URL pública de la sección **Enlaces de entrega**. Mantén EC2 encendida durante al menos tres horas desde que compartas el enlace con el profesor. La instancia no se detiene automáticamente; consulta la guía AWS para detenerla después de la revisión.
 
 ## Referencias
 
