@@ -1,0 +1,83 @@
+### Cambia baseUrl para probar tu despliegue AWS
+@baseUrl = http://localhost:8080
+
+### Salud
+GET {{baseUrl}}/actuator/health
+
+### Crear paciente y guardar su ID real
+POST {{baseUrl}}/api/pacientes
+Content-Type: application/json
+
+{
+  "documento": "1001234567",
+  "nombres": "Ana",
+  "apellidos": "Pérez",
+  "fechaNacimiento": "2000-05-10",
+  "email": "ana@example.com",
+  "telefono": "3001234567"
+}
+
+> {% client.global.set("pacienteId", response.body.id); %}
+
+### Listar pacientes
+GET {{baseUrl}}/api/pacientes
+
+### Consultar paciente
+GET {{baseUrl}}/api/pacientes/{{pacienteId}}
+
+### Actualizar paciente
+PUT {{baseUrl}}/api/pacientes/{{pacienteId}}
+Content-Type: application/json
+
+{
+  "documento": "1001234567",
+  "nombres": "Ana María",
+  "apellidos": "Pérez",
+  "fechaNacimiento": "2000-05-10",
+  "email": "ana@example.com",
+  "telefono": "3007654321"
+}
+
+### Crear cita y guardar su ID real
+POST {{baseUrl}}/api/citas
+Content-Type: application/json
+
+{
+  "pacienteId": {{pacienteId}},
+  "fechaHora": "2026-11-15T09:00:00",
+  "motivo": "Control general",
+  "medico": "Dra. Laura Gómez",
+  "estado": "PROGRAMADA"
+}
+
+> {% client.global.set("citaId", response.body.id); %}
+
+### Listar citas
+GET {{baseUrl}}/api/citas
+
+### Consultar cita
+GET {{baseUrl}}/api/citas/{{citaId}}
+
+### Citas del paciente
+GET {{baseUrl}}/api/pacientes/{{pacienteId}}/citas
+
+### Actualizar cita
+PUT {{baseUrl}}/api/citas/{{citaId}}
+Content-Type: application/json
+
+{
+  "pacienteId": {{pacienteId}},
+  "fechaHora": "2026-11-15T10:00:00",
+  "motivo": "Control general",
+  "medico": "Dra. Laura Gómez",
+  "estado": "COMPLETADA"
+}
+
+### Debe devolver 409 porque todavía tiene una cita
+DELETE {{baseUrl}}/api/pacientes/{{pacienteId}}
+
+### Eliminar primero la cita
+DELETE {{baseUrl}}/api/citas/{{citaId}}
+
+### Eliminar después el paciente
+DELETE {{baseUrl}}/api/pacientes/{{pacienteId}}
