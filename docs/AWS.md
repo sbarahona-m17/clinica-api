@@ -8,6 +8,24 @@ Internet → EC2:80 → API:8080 → PostgreSQL:5432 → volumen postgres_data
 
 Elige el tamaño según tu presupuesto; para construir la imagen en el servidor, se recomiendan al menos **2 GiB de RAM**. AWS puede cobrar por cómputo, almacenamiento y dirección IPv4; revisa los créditos y precios que aplican a tu cuenta antes de crear recursos. [Guía oficial de EC2](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/EC2_GetStarted.html).
 
+## Opción con CloudShell, incluso sin VPC predeterminada
+
+Desde CloudShell en la región **us-east-2**, clona el repositorio y ejecuta:
+
+```bash
+git clone https://github.com/sbarahona-m17/clinica-api.git clinica-despliegue
+cd clinica-despliegue
+bash scripts/deploy-aws.sh
+```
+
+El script usa [`infra/aws.yaml`](../infra/aws.yaml) para crear una red propia, subred pública, salida a internet, grupo de seguridad HTTP y una EC2 `t3.small` con disco EBS de 16 GiB. No requiere una VPC existente, claves SSH ni un rol IAM en la instancia. La cuenta que ejecuta CloudShell debe tener permisos de CloudFormation, EC2 y lectura del parámetro público SSM de Ubuntu.
+
+La contraseña de PostgreSQL se genera dentro de EC2 y se guarda en `.env`; no aparece en la consola ni en GitHub. Solo se publica el puerto 80. El script espera una respuesta de salud `UP` antes de anunciar el enlace listo. Si falla, comparte los eventos mostrados antes de volver a ejecutar; no crees una segunda instancia para resolver el mismo error.
+
+La instancia permanece activa hasta que la detengas. Cuenta las tres horas de revisión desde que hayas entregado el enlace al profesor; puedes cerrar CloudShell y apagar tu computador. Después de la revisión, usa el comando `aws ec2 stop-instances` que imprime el script. Detener EC2 conserva el disco, que puede seguir generando cargos. [Información de facturación EBS con instancias detenidas](https://repost.aws/knowledge-center/ebs-charge-stopped-instance).
+
+Para eliminar definitivamente los recursos cuando ya no necesites los datos, desde la consola de CloudFormation selecciona el stack `clinica-api-sofia` y revisa la acción **Delete**: elimina también el servidor y su disco, incluidos los datos PostgreSQL. No lo elimines antes de la revisión. El despliegue manual alternativo se explica a continuación.
+
 ## 1. Publicar el código
 
 El proyecto está publicado en [sbarahona-m17/clinica-api](https://github.com/sbarahona-m17/clinica-api). Los comandos de esta guía contienen `TU_IP_PUBLICA` y `tu-clave.pem`: sustitúyelos por tus valores reales. No subas `.env`, claves `.pem` ni credenciales AWS al repositorio.

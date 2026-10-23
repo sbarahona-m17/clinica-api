@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Clinica API - EC2, PostgreSQL y red publica para demostracion academica
+
+Parameters:
+  UbuntuAmi:
+    Type: AWS::SSM::Parameter::Value<AWS::EC2::Image::Id>
+    Default: /aws/service/canonical/ubuntu/server/24.04/stable/current/amd64/hvm/ebs-gp3/ami-id
+  InstanceType:
+    Type: String
+    Default: t3.small
+    AllowedValues: [t3.small, t3.medium]
+
+Resources:
+  Vpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.73.0.0/16
+      EnableDnsSupport: true
+      EnableDnsHostnames: true
+      Tags:
+        - Key: Name
+          Value: clinica-vpc
+  InternetGateway:
+    Type: AWS::EC2::InternetGateway
+  GatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref Vpc
+      InternetGatewayId: !Ref InternetGateway
+  PublicSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref Vpc
+      CidrBlock: 10.73.1.0/24
+      MapPublicIpOnLaunch: true
+  RouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref Vpc
+  PublicRoute:
+    Type: AWS::EC2::Route
+    DependsOn: GatewayAttachment
+    Properties:
+      RouteTableId: !Ref RouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref InternetGateway
+  SubnetRoute:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      SubnetId: !Ref PublicSubnet
+      RouteTableId: !Ref RouteTable
+  ApiSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Acceso HTTP a la API academica
+      VpcId: !Ref Vpc
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/0
+  Server:
+    Type: AWS::EC2::Instance
+    DependsOn: [PublicRoute, SubnetRoute]
+    Properties:
+      ImageId: !Ref UbuntuAmi
+      InstanceType: !Ref InstanceType
+      InstanceInitiatedShutdownBehavior: stop
+      MetadataOptions:
+        HttpTokens: required
+      BlockDeviceMappings:
+        - DeviceName: /dev/sda1
+          Ebs:
+            VolumeSize: 16
+            VolumeType: gp3
+            Encrypted: true
+            DeleteOnTermination: true
+      NetworkInterfaces:
+        - DeviceIndex: '0'
+          AssociatePublicIpAddress: true
+          SubnetId: !Ref PublicSubnet
+          GroupSet: [!Ref ApiSecurityGroup]
+      Tags:
+        - Key: Name
+          Value: clinica-api-sofia
+      UserData:
+        Fn::Base64: |
+          #!/bin/bash
+          set -euo pipefail
+          exec > >(tee -a /var/log/clinica-bootstrap.log /dev/console) 2>&1
+          export DEBIAN_FRONTEND=noninteractive
+          apt-get update
+          apt-get install -y ca-certificates curl git openssl
+          install -m 0755 -d /etc/apt/keyrings
+          curl --retry 5 -fsSL https://download.docker.com/linux/ubuntu/gpg -o /etc/apt/keyrings/docker.asc
+          chmod a+r /etc/apt/keyrings/docker.asc
+          cat > /etc/apt/sources.list.d/docker.sources <<'EOF'
+          Types: deb
+          URIs: https://download.docker.com/linux/ubuntu
+          Suites: noble
+          Components: stable
+          Architectures: amd64
+          Signed-By: /etc/apt/keyrings/docker.asc
+          EOF
+          apt-get update
+          apt-get install -y docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin
+          systemctl enable --now docker
+          git clone --depth 1 https://github.com/sbarahona-m17/clinica-api.git /opt/clinica-api
+          cd /opt/clinica-api
+          umask 077
+          printf 'DB_PASSWORD=%s\n' "$(openssl rand -hex 24)" > .env
+          docker compose -f compose.aws.yaml up --build -d
+          echo 'CLINICA: construccion completa. Esperando inicio de Spring Boot.'
+
+Outputs:
+  ApiUrl:
+    Description: Enlace publico de la API (usar HTTP)
+    Value: !Sub http://${Server.PublicIp}
+  InstanceId:
+    Description: Instancia que debe permanecer encendida durante la revision
+    Value: !Ref Server

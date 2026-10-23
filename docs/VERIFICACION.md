@@ -12,6 +12,8 @@ Fecha: **23 de octubre de 2026**.
 | Limpieza | Se eliminaron los registros ficticios usados en las pruebas HTTP |
 | `GET /actuator/health` después de recrear los contenedores | HTTP 200, `{"status":"UP"}` |
 | `docker compose --env-file .env.example -f compose.aws.yaml config --quiet` | Configuración válida |
+| `cfn-lint -t infra/aws.yaml -r us-east-2` | Plantilla de infraestructura válida, sin errores ni advertencias |
+| `bash -n scripts/deploy-aws.sh` y script UserData extraído de la plantilla | Sintaxis Bash válida |
 
 La validación del archivo Compose de AWS es local. **No se ha creado ni verificado una instancia AWS**. El repositorio está publicado en [GitHub](https://github.com/sbarahona-m17/clinica-api); el despliegue se realiza siguiendo [AWS.md](AWS.md).
 
